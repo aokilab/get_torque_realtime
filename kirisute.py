@@ -7,10 +7,11 @@ import numpy as np
 
 # グローバル変数（トルクデータと角度データを格納する行列および変数）
 torque_matrix = np.zeros((1, 7))
-angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0
+ang1, ang2, ang3, ang4, ang5, ang6, ang7 = 0, 0, 0, 0, 0, 0, 0
 
 def callback(data):
-    global torque_matrix, ang1, ang2, ang3, ang4, ang5, ang6, ang7
+    global torque_matrix, angle1, angle2, angle3, angle4, angle5, angle6, angle7, ang1, ang2, ang3, ang4, ang5, ang6, ang7
     # 最初の7つのトルクデータを行列に格納
     torque_matrix = np.array([data.effort[:7]])
     # 各関節の角度データを変数に代入
@@ -82,17 +83,37 @@ def main():
         f7 = (((np.sin(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) + np.cos(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2/(np.cos(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) - np.sin(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2 + 1)*(np.cos(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) - np.sin(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2)/((np.sin(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) + np.cos(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2 + (np.cos(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) - np.sin(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2)
 
         # ヤコビアンを転置行列化
-        jac_t = np.matrix(([a1,b1,c1,d1,e1,f1],
-                           [a2,b2,c2,d2,e2,f2],
-                           [a3,b3,c3,d3,e3,f3],
-                           [a4,b4,c4,d4,e4,f4],
-                           [a5,b5,c5,d5,e5,f5],
-                           [a6,b6,c6,d6,e6,f6],
-                           [a7,b7,c7,d7,e7,f7]))
+        jac_t = np.matrix(([a1,b1,c1,d1,e1,f1,0],
+                           [a2,b2,c2,d2,e2,f2,0],
+                           [a3,b3,c3,d3,e3,f3,0],
+                           [a4,b4,c4,d4,e4,f4,0],
+                           [a5,b5,c5,d5,e5,f5,0],
+                           [a6,b6,c6,d6,e6,f6,0],
+                           [a7,b7,c7,d7,e7,f7,0]))
                            
 
+        # ヤコビアン転置行列の逆行列
+        jac_t_inv = np.linalg.pinv(jac_t)
+        # 先端力を計算
+        torque_matrix_T = np.transpose(torque_matrix)
+        f = jac_t_inv*torque_matrix_T
+        #f = jac_t_inv.dot(torque_matrix.T)
+        print(f)
 
-
+        """
+        # 特異値分解を行い、特異値が収束しているか確認
+        _, s, _ = np.linalg.svd(jac_t)
+        cond = np.min(s) / np.max(s)
+            
+        # 収束している場合のみ計算を実行
+        if cond > np.finfo(float).eps:
+            # ヤコビアン転置行列の逆行列
+            jac_t_inv = np.linalg.pinv(jac_t)
+            # 先端力を計算
+            f = jac_t_inv*torque_matrix
+            print(f)
+        """
+"""
         # ここでランクを確認
         rank_jac_t = np.linalg.matrix_rank(jac_t)
 
@@ -115,9 +136,9 @@ def main():
                     print("Singular values did not converge.")
             except np.linalg.LinAlgError as e:
                 print("Error in matrix calculation:", e)
-        #else:
-            #print("Matrix does not have full rank.")
+        else:
+            print("Matrix does not have full rank.")
 
-
+"""
 if __name__ == "__main__":
     main()
