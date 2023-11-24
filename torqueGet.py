@@ -10,8 +10,8 @@ torque_matrix = np.zeros((1, 7))
 
 def callback(data):
     global torque_matrix
-    # トルクデータを行列に格納
-    torque_matrix = np.array([data.effort])
+    # 最初の7つのトルクデータを行列に格納
+    torque_matrix = np.array([data.effort[:7]])
 
 def main():
     rospy.init_node("joint_states_listener", anonymous=True)
