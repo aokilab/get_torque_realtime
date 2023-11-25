@@ -3,12 +3,13 @@
 
 import rospy
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64MultiArray
 import numpy as np
 
 # グローバル変数（トルクデータと角度データを格納する行列および変数）
 torque_matrix = np.zeros((1, 7))
-angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0
-ang1, ang2, ang3, ang4, ang5, ang6, ang7 = 0, 0, 0, 0, 0, 0, 0
+angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0
+ang1, ang2, ang3, ang4, ang5, ang6, ang7 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
 def callback(data):
     global torque_matrix, angle1, angle2, angle3, angle4, angle5, angle6, angle7, ang1, ang2, ang3, ang4, ang5, ang6, ang7
@@ -20,20 +21,21 @@ def callback(data):
 def main():
     rospy.init_node("joint_states_listener", anonymous=True)
     rospy.Subscriber("/torobo/joint_states", JointState, callback)
-
+    pub = rospy.Publisher('/torobo/torque_end', Float64MultiArray, queue_size=10)
+    rate = rospy.Rate(10)  # 10Hz
     # ここでトピックが更新されるたびにコールバック関数が呼ばれる
 
     # ヤコビアンの計算を行う
     while not rospy.is_shutdown():
-        ang1 = np.radians(round(angle1, 2))
-        ang2 = np.radians(round(angle2, 2))
-        ang3 = np.radians(round(angle3, 2))
-        ang4 = np.radians(round(angle4, 2))
-        ang5 = np.radians(round(angle5, 2))
-        ang6 = np.radians(round(angle6, 2))
-        ang7 = np.radians(round(angle7, 2))
-
-
+        ang1 = np.radians(angle1)
+        ang2 = np.radians(angle2)
+        ang3 = np.radians(angle3)
+        ang4 = np.radians(angle4)
+        ang5 = np.radians(angle5)
+        ang6 = np.radians(angle6)
+        ang7 = np.radians(angle7)
+        
+        
         a1 = - (3*np.sin(ang1)*np.sin(ang2))/10 - (3*np.sin(ang4)*(np.cos(ang1)*np.sin(ang3) + np.cos(ang2)*np.cos(ang3)*np.sin(ang1)))/10 - (17*np.sin(ang6)*(np.sin(ang5)*(np.cos(ang1)*np.cos(ang3) - np.cos(ang2)*np.sin(ang1)*np.sin(ang3)) + np.cos(ang5)*(np.cos(ang4)*(np.cos(ang1)*np.sin(ang3) + np.cos(ang2)*np.cos(ang3)*np.sin(ang1)) - np.sin(ang1)*np.sin(ang2)*np.sin(ang4))))/100 - (17*np.cos(ang6)*(np.sin(ang4)*(np.cos(ang1)*np.sin(ang3) + np.cos(ang2)*np.cos(ang3)*np.sin(ang1)) + np.cos(ang4)*np.sin(ang1)*np.sin(ang2)))/100 - (3*np.cos(ang4)*np.sin(ang1)*np.sin(ang2))/10
         a2 = (17*np.cos(ang6)*(np.cos(ang1)*np.cos(ang2)*np.cos(ang4) - np.cos(ang1)*np.cos(ang3)*np.sin(ang2)*np.sin(ang4)))/100 + (3*np.cos(ang1)*np.cos(ang2))/10 - (17*np.sin(ang6)*(np.cos(ang5)*(np.cos(ang1)*np.cos(ang2)*np.sin(ang4) + np.cos(ang1)*np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.cos(ang1)*np.sin(ang2)*np.sin(ang3)*np.sin(ang5)))/100 + (3*np.cos(ang1)*np.cos(ang2)*np.cos(ang4))/10 - (3*np.cos(ang1)*np.cos(ang3)*np.sin(ang2)*np.sin(ang4))/10
         a3 = (17*np.sin(ang6)*(np.sin(ang5)*(np.sin(ang1)*np.sin(ang3) - np.cos(ang1)*np.cos(ang2)*np.cos(ang3)) - np.cos(ang4)*np.cos(ang5)*(np.cos(ang3)*np.sin(ang1) + np.cos(ang1)*np.cos(ang2)*np.sin(ang3))))/100 - (3*np.sin(ang4)*(np.cos(ang3)*np.sin(ang1) + np.cos(ang1)*np.cos(ang2)*np.sin(ang3)))/10 - (17*np.cos(ang6)*np.sin(ang4)*(np.cos(ang3)*np.sin(ang1) + np.cos(ang1)*np.cos(ang2)*np.sin(ang3)))/100
@@ -83,62 +85,29 @@ def main():
         f7 = (((np.sin(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) + np.cos(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2/(np.cos(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) - np.sin(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2 + 1)*(np.cos(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) - np.sin(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2)/((np.sin(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) + np.cos(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2 + (np.cos(ang7)*(np.sin(ang6)*(np.cos(ang2)*np.cos(ang4) - np.cos(ang3)*np.sin(ang2)*np.sin(ang4)) + np.cos(ang6)*(np.cos(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.sin(ang2)*np.sin(ang3)*np.sin(ang5))) - np.sin(ang7)*(np.sin(ang5)*(np.cos(ang2)*np.sin(ang4) + np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) + np.cos(ang5)*np.sin(ang2)*np.sin(ang3)))**2)
 
         # ヤコビアンを転置行列化
-        jac_t = np.matrix(([a1,b1,c1,d1,e1,f1,0],
-                           [a2,b2,c2,d2,e2,f2,0],
-                           [a3,b3,c3,d3,e3,f3,0],
-                           [a4,b4,c4,d4,e4,f4,0],
-                           [a5,b5,c5,d5,e5,f5,0],
-                           [a6,b6,c6,d6,e6,f6,0],
-                           [a7,b7,c7,d7,e7,f7,0]))
+        jac_t = np.matrix(([a1,b1,c1,d1,e1,f1],
+                           [a2,b2,c2,d2,e2,f2],
+                           [a3,b3,c3,d3,e3,f3],
+                           [a4,b4,c4,d4,e4,f4],
+                           [a5,b5,c5,d5,e5,f5],
+                           [a6,b6,c6,d6,e6,f6],
+                           [a7,b7,c7,d7,e7,f7]))
                            
 
-        # ヤコビアン転置行列の逆行列
+        # ヤコビアン転置行列の疑似逆行列
         jac_t_inv = np.linalg.pinv(jac_t)
         # 先端力を計算
         torque_matrix_T = np.transpose(torque_matrix)
         f = jac_t_inv*torque_matrix_T
         #f = jac_t_inv.dot(torque_matrix.T)
         print(f)
+        
+        pub.publish(Float64MultiArray(data=f.flatten().tolist()[0]))
 
-        """
-        # 特異値分解を行い、特異値が収束しているか確認
-        _, s, _ = np.linalg.svd(jac_t)
-        cond = np.min(s) / np.max(s)
-            
-        # 収束している場合のみ計算を実行
-        if cond > np.finfo(float).eps:
-            # ヤコビアン転置行列の逆行列
-            jac_t_inv = np.linalg.pinv(jac_t)
-            # 先端力を計算
-            f = jac_t_inv*torque_matrix
-            print(f)
-        """
-"""
-        # ここでランクを確認
-        rank_jac_t = np.linalg.matrix_rank(jac_t)
 
-        if rank_jac_t == 7:
-        # ランクが不足していない場合のみ計算を行う
-            try:
-                # 特異値分解を行い、特異値が収束しているか確認
-                _, s, _ = np.linalg.svd(jac_t)
-                cond = np.min(s) / np.max(s)
-            
-                # 収束している場合のみ計算を実行
-                if cond > np.finfo(float).eps:
-                    # ヤコビアン転置行列の逆行列
-                    jac_t_inv = np.linalg.pinv(jac_t)
-                    # 先端力を計算
-                    f = jac_t_inv*torque_matrix
+        rate.sleep()
+ 
 
-                    print(f)
-                else:
-                    print("Singular values did not converge.")
-            except np.linalg.LinAlgError as e:
-                print("Error in matrix calculation:", e)
-        else:
-            print("Matrix does not have full rank.")
 
-"""
 if __name__ == "__main__":
     main()

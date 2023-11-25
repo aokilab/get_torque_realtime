@@ -3,14 +3,16 @@
 
 import rospy
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64MultiArray
 import numpy as np
 
 # グローバル変数（トルクデータと角度データを格納する行列および変数）
 torque_matrix = np.zeros((1, 7))
-angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0
+ang1, ang2, ang3, ang4, ang5, ang6, ang7 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
 def callback(data):
-    global torque_matrix, ang1, ang2, ang3, ang4, ang5, ang6, ang7
+    global torque_matrix, angle1, angle2, angle3, angle4, angle5, angle6, angle7, ang1, ang2, ang3, ang4, ang5, ang6, ang7
     # 最初の7つのトルクデータを行列に格納
     torque_matrix = np.array([data.effort[:7]])
     # 各関節の角度データを変数に代入
@@ -19,7 +21,8 @@ def callback(data):
 def main():
     rospy.init_node("joint_states_listener", anonymous=True)
     rospy.Subscriber("/torobo/joint_states", JointState, callback)
-
+    pub = rospy.Publisher('/torobo/torque_end', Float64MultiArray, queue_size=10)
+    rate = rospy.Rate(10)  # 10Hz
     # ここでトピックが更新されるたびにコールバック関数が呼ばれる
 
     # ヤコビアンの計算を行う
@@ -31,8 +34,8 @@ def main():
         ang5 = np.radians(angle5)
         ang6 = np.radians(angle6)
         ang7 = np.radians(angle7)
-
-
+        
+        
         a1 = - (3*np.sin(ang1)*np.sin(ang2))/10 - (3*np.sin(ang4)*(np.cos(ang1)*np.sin(ang3) + np.cos(ang2)*np.cos(ang3)*np.sin(ang1)))/10 - (17*np.sin(ang6)*(np.sin(ang5)*(np.cos(ang1)*np.cos(ang3) - np.cos(ang2)*np.sin(ang1)*np.sin(ang3)) + np.cos(ang5)*(np.cos(ang4)*(np.cos(ang1)*np.sin(ang3) + np.cos(ang2)*np.cos(ang3)*np.sin(ang1)) - np.sin(ang1)*np.sin(ang2)*np.sin(ang4))))/100 - (17*np.cos(ang6)*(np.sin(ang4)*(np.cos(ang1)*np.sin(ang3) + np.cos(ang2)*np.cos(ang3)*np.sin(ang1)) + np.cos(ang4)*np.sin(ang1)*np.sin(ang2)))/100 - (3*np.cos(ang4)*np.sin(ang1)*np.sin(ang2))/10
         a2 = (17*np.cos(ang6)*(np.cos(ang1)*np.cos(ang2)*np.cos(ang4) - np.cos(ang1)*np.cos(ang3)*np.sin(ang2)*np.sin(ang4)))/100 + (3*np.cos(ang1)*np.cos(ang2))/10 - (17*np.sin(ang6)*(np.cos(ang5)*(np.cos(ang1)*np.cos(ang2)*np.sin(ang4) + np.cos(ang1)*np.cos(ang3)*np.cos(ang4)*np.sin(ang2)) - np.cos(ang1)*np.sin(ang2)*np.sin(ang3)*np.sin(ang5)))/100 + (3*np.cos(ang1)*np.cos(ang2)*np.cos(ang4))/10 - (3*np.cos(ang1)*np.cos(ang3)*np.sin(ang2)*np.sin(ang4))/10
         a3 = (17*np.sin(ang6)*(np.sin(ang5)*(np.sin(ang1)*np.sin(ang3) - np.cos(ang1)*np.cos(ang2)*np.cos(ang3)) - np.cos(ang4)*np.cos(ang5)*(np.cos(ang3)*np.sin(ang1) + np.cos(ang1)*np.cos(ang2)*np.sin(ang3))))/100 - (3*np.sin(ang4)*(np.cos(ang3)*np.sin(ang1) + np.cos(ang1)*np.cos(ang2)*np.sin(ang3)))/10 - (17*np.cos(ang6)*np.sin(ang4)*(np.cos(ang3)*np.sin(ang1) + np.cos(ang1)*np.cos(ang2)*np.sin(ang3)))/100
@@ -91,32 +94,19 @@ def main():
                            [a7,b7,c7,d7,e7,f7]))
                            
 
+        # ヤコビアン転置行列の疑似逆行列
+        jac_t_inv = np.linalg.pinv(jac_t)
+        # 先端力を計算
+        torque_matrix_T = np.transpose(torque_matrix)
+        f = jac_t_inv*torque_matrix_T
+        #f = jac_t_inv.dot(torque_matrix.T)
+        print(f)
+        
+        pub.publish(Float64MultiArray(data=f.flatten().tolist()[0]))
 
 
-        # ここでランクを確認
-        rank_jac_t = np.linalg.matrix_rank(jac_t)
-
-        if rank_jac_t == 7:
-        # ランクが不足していない場合のみ計算を行う
-            try:
-                # 特異値分解を行い、特異値が収束しているか確認
-                _, s, _ = np.linalg.svd(jac_t)
-                cond = np.min(s) / np.max(s)
-            
-                # 収束している場合のみ計算を実行
-                if cond > np.finfo(float).eps:
-                    # ヤコビアン転置行列の逆行列
-                    jac_t_inv = np.linalg.pinv(jac_t)
-                    # 先端力を計算
-                    f = jac_t_inv*torque_matrix
-
-                    print(f)
-                else:
-                    print("Singular values did not converge.")
-            except np.linalg.LinAlgError as e:
-                print("Error in matrix calculation:", e)
-        #else:
-            #print("Matrix does not have full rank.")
+        rate.sleep()
+ 
 
 
 if __name__ == "__main__":
