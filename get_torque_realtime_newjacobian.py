@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import rospy
@@ -34,7 +34,7 @@ def main():
         ang5 = radians(angle5)
         ang6 = radians(angle6)
         ang7 = radians(angle7)
-        
+
         jac = matrix([[(320*((-sin(ang1)*cos(ang2)*cos(ang3) + sin(ang3)*cos(ang1))*cos(ang4) + sin(ang1)*sin(ang2)*sin(ang4))*cos(ang5) + 320*(sin(ang1)*sin(ang3)*cos(ang2) + cos(ang1)*cos(ang3))*sin(ang5))*sin(ang6) + (320*(-sin(ang1)*cos(ang2)*cos(ang3) + sin(ang3)*cos(ang1))*sin(ang4) - 320*sin(ang1)*sin(ang2)*cos(ang4))*cos(ang6) + (-300*sin(ang1)*cos(ang2)*cos(ang3) + 300*sin(ang3)*cos(ang1))*sin(ang4) - 300*sin(ang1)*sin(ang2)*cos(ang4) - 300*sin(ang1)*sin(ang2),
                        (320*(-sin(ang2)*cos(ang1)*cos(ang3)*cos(ang4) - sin(ang4)*cos(ang1)*cos(ang2))*cos(ang5) + 320*sin(ang2)*sin(ang3)*sin(ang5)*cos(ang1))*sin(ang6) + (-320*sin(ang2)*sin(ang4)*cos(ang1)*cos(ang3) + 320*cos(ang1)*cos(ang2)*cos(ang4))*cos(ang6) - 300*sin(ang2)*sin(ang4)*cos(ang1)*cos(ang3) + 300*cos(ang1)*cos(ang2)*cos(ang4) + 300*cos(ang1)*cos(ang2),
                        (320*(-sin(ang1)*sin(ang3) - cos(ang1)*cos(ang2)*cos(ang3))*sin(ang5) + 320*(sin(ang1)*cos(ang3) - sin(ang3)*cos(ang1)*cos(ang2))*cos(ang4)*cos(ang5))*sin(ang6) + 320*(sin(ang1)*cos(ang3) - sin(ang3)*cos(ang1)*cos(ang2))*sin(ang4)*cos(ang6) + (300*sin(ang1)*cos(ang3) - 300*sin(ang3)*cos(ang1)*cos(ang2))*sin(ang4),
@@ -82,22 +82,19 @@ def main():
 
         # ヤコビアンを転置行列化
         jac_t =  jac.T
-                           
 
         # ヤコビアン転置行列の疑似逆行列
-        jac_t_inv = np.linalg.pinv(jac_t)
+        jac_t_inv = linalg.pinv(jac_t)
         # 先端力を計算
-        torque_matrix_T = np.transpose(torque_matrix)
+        torque_matrix_T = transpose(torque_matrix)
         f = jac_t_inv*torque_matrix_T
         #f = jac_t_inv.dot(torque_matrix.T)
         print(f)
-        
+
         pub.publish(Float64MultiArray(data=f.flatten().tolist()[0]))
 
 
         rate.sleep()
- 
-
 
 if __name__ == "__main__":
     main()
