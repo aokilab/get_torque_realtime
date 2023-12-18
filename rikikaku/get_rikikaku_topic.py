@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import serial
 import struct
@@ -6,7 +7,6 @@ import rospy
 from std_msgs.msg import Int32MultiArray
 
 def set_serial_attributes(ser):
-    # シリアル通信の設定を行う関数
     ser.baudrate = 921600  # ボーレート
     ser.bytesize = serial.EIGHTBITS  # データビット数
     ser.parity = serial.PARITY_NONE  # パリティビット
@@ -44,10 +44,10 @@ def main():
             record_number, Fx, Fy, Fz, Mx, My, Mz = decode_data(response)
 
             # データの処理や保存などをここで行う
-            rospy.loginfo(f"Record Number: {record_number}, Fx: {Fx}, Fy: {Fy}, Fz: {Fz}, Mx: {Mx}, My: {My}, Mz: {Mz}")
+            rospy.loginfo("Record Number: {}, Fx: {}, Fy: {}, Fz: {}, Mx: {}, My: {}, Mz: {}".format(record_number, Fx, Fy, Fz, Mx, My, Mz))
 
             # ROSトピックにデータをパブリッシュ
-            data_array = [Fx, Fy, Fz, Mx, My, Mz]
+            data_array = [record_number, Fx, Fy, Fz, Mx, My, Mz]
             pub.publish(data_array)
 
             rate.sleep()
