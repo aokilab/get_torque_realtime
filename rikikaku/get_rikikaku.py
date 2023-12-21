@@ -46,10 +46,5 @@ def main():
 
     except KeyboardInterrupt:
         print("プログラムが中断されました。")
-
-    finally:
-        # 終了時にシリアルポートを閉じる
-        ser.close()
-
 if __name__ == "__main__":
     main()
