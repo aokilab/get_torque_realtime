@@ -4,7 +4,9 @@
 import serial
 import struct
 import rospy
-from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Int32MultiArray, MultiArrayLayout, MultiArrayDimension
+
+
 
 def set_serial_attributes(ser):
     ser.baudrate = 921600  # ボーレート
@@ -47,7 +49,12 @@ def main():
             rospy.loginfo("Record Number: {}, Fx: {}, Fy: {}, Fz: {}, Mx: {}, My: {}, Mz: {}".format(record_number, Fx, Fy, Fz, Mx, My, Mz))
 
             # ROSトピックにデータをパブリッシュ
-            data_array = [record_number, Fx, Fy, Fz, Mx, My, Mz]
+            data_array = Int32MultiArray()
+            data_array.layout.dim.append(MultiArrayDimension())
+            data_array.layout.dim[0].label = "sensor_data"
+            data_array.layout.dim[0].size = 7  # データの要素数
+            data_array.layout.dim[0].stride = 1
+            data_array.data = [record_number, Fx, Fy, Fz, Mx, My, Mz]
             pub.publish(data_array)
 
             rate.sleep()
