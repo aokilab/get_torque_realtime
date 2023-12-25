@@ -13,14 +13,17 @@ def set_serial_attributes(ser):
     ser.stopbits = serial.STOPBITS_ONE
     ser.timeout = 0.1  # タイムアウト（秒）
 
+'''
+
 def request_data(ser):
     ser.write(b'R')
     response = ser.read(27)
     return response
 
+
 def decode_data(response):
     # バイトオーダーはリトルエンディアン、符号あり32ビット整数
-    data = struct.unpack("<bhhhhhhhhhhhhbb", response)
+    data = struct.unpack("<bHHHHHHHHHHHHH", response)
     record_number = data[0]
     Fx_hex = data[1:2]
     Fy_hex = data[3:4]
@@ -29,13 +32,43 @@ def decode_data(response):
     My_hex = data[9:10]
     Mz_hex = data[11:12]
 
+    print(data)
+
     # 16進数を10進数に変換
-    Fx = int(Fx_hex[0])
-    Fy = int(Fy_hex[0])
-    Fz = int(Fz_hex[0])
-    Mx = int(Mx_hex[0])
-    My = int(My_hex[0])
-    Mz = int(Mz_hex[0])
+    Fx = int(Fx_hex,16)
+    Fy = int(Fy_hex,16)
+    Fz = int(Fz_hex,16)
+    Mx = int(Mx_hex,16)
+    My = int(My_hex,16)
+    Mz = int(Mz_hex,16)
+
+    return Fx, Fy, Fz, Mx, My, Mz
+
+'''
+
+def decode_data(ser):
+    ser.write(b'R')
+    data = ser.readline()
+    record_number = data[0]
+    Fx_hex = data[1:5]
+    Fy_hex = data[5:9]
+    Fz_hex = data[9:13]
+    Mx_hex = data[13:17]
+    My_hex = data[17:21]
+    Mz_hex = data[21:25]
+
+    print(data)
+
+    # 16進数を10進数に変換
+    Fx = int(Fx_hex,16)
+    Fy = int(Fy_hex,16)
+    Fz = int(Fz_hex,16)
+    Mx = int(Mx_hex,16)
+    My = int(My_hex,16)
+    Mz = int(Mz_hex,16)
+
+    print(Fx_hex , Fx)
+    print(Fy_hex , Fy)
 
     return Fx, Fy, Fz, Mx, My, Mz
 
@@ -51,8 +84,10 @@ def main():
 
     try:
         while not rospy.is_shutdown():
-            response = request_data(ser)
-            Fx, Fy, Fz, Mx, My, Mz = decode_data(response)
+            #response = request_data(ser)
+            #Fx, Fy, Fz, Mx, My, Mz = decode_data(response)
+
+            Fx, Fy, Fz, Mx, My, Mz = decode_data(ser)
 
             rospy.loginfo("Fx: {}, Fy: {}, Fz: {}, Mx: {}, My: {}, Mz: {}".format(Fx, Fy, Fz, Mx, My, Mz))
 
