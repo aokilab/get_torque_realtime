@@ -84,7 +84,9 @@ def main():
         jac_t =  jac.T
 
         # ヤコビアン転置行列の疑似逆行列
-        jac_t_inv = linalg.pinv(jac_t)
+        #jac_t_inv = linalg.pinv(jac_t)
+        jac_t_inv = jac_t * linalg.inv(jac *jac_t)
+
         # 先端力を計算
         torque_matrix_T = transpose(torque_matrix)
         f = jac_t_inv*torque_matrix_T
