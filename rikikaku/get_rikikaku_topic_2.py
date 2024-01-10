@@ -13,7 +13,7 @@ def set_serial_attributes(ser):
     ser.stopbits = serial.STOPBITS_ONE
     ser.timeout = 0.1  # タイムアウト（秒）
 
-def calculate_calibration_data(ser, num_samples=500):
+def calculate_calibration_data(ser, num_samples=100):
     calibration_data = [0, 0, 0, 0, 0, 0]  # Fx, Fy, Fz, Mx, My, Mz
     for _ in range(num_samples):
         ser.write(b'R')
@@ -68,13 +68,13 @@ def decode_data(ser, calibration_data):
     return Fx, Fy, Fz, Mx, My, Mz
 
 def main():
-    com_port = "/dev/ttyUSB0"
+    com_port = "/dev/ttyUSB1"
     ser = serial.Serial(com_port)
     set_serial_attributes(ser)
 
     rospy.init_node('sensor_data_publisher', anonymous=True)
     pub = rospy.Publisher('sensor_data', Int32MultiArray, queue_size=10)
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(1000)
 
     # 最初の100回分のデータを用いてキャリブレーションデータを計算
     calibration_data = calculate_calibration_data(ser, num_samples=100)

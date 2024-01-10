@@ -84,13 +84,12 @@ def main():
         jac_t =  jac.T
 
         # ヤコビアン転置行列の疑似逆行列
-        #jac_t_inv = linalg.pinv(jac_t)
-        jac_t_inv = jac_t * linalg.inv(jac *jac_t)
+        jac_t_inv = linalg.pinv(jac_t)
+        #jac_t_inv = linalg.inv(jac *jac_t) * jac
 
         # 先端力を計算
         torque_matrix_T = transpose(torque_matrix)
         f = jac_t_inv*torque_matrix_T
-        #f = jac_t_inv.dot(torque_matrix.T)
         print(f)
 
         pub.publish(Float64MultiArray(data=f.flatten().tolist()[0]))

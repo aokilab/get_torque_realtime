@@ -17,20 +17,20 @@ ang7 = Symbol("ang7")
 T1 = np.matrix([
     [cos(ang1), -sin(ang1), 0, 0],
     [sin(ang1), cos(ang1), 0, 0],
-    [0, 0, 1, 130],
+    [0, 0, 1, 215],
     [0, 0, 0, 1]
 ])
 
 T2 = np.matrix([
     [cos(ang2), -sin(ang2), 0, 0],
     [0, 0, 1, 0],
-    [-sin(ang2), -cos(ang2), 0, 115],
+    [-sin(ang2), -cos(ang2), 0, 0],
     [0, 0, 0, 1]
 ])
 
 T3 = np.matrix([
     [cos(ang3), -sin(ang3), 0, 0],
-    [0, 0, -1, -190],
+    [0, 0, -1, -300],
     [sin(ang3), cos(ang3), 0, 0],
     [0, 0, 0, 1]
 ])
@@ -38,13 +38,13 @@ T3 = np.matrix([
 T4 = np.matrix([
     [cos(ang4), -sin(ang4), 0, 0],
     [0, 0, 1, 0],
-    [-sin(ang4), -cos(ang4), 0, 110],
+    [-sin(ang4), -cos(ang4), 0, 0],
     [0, 0, 0, 1]
 ])
 
 T5 = np.matrix([
     [cos(ang5), -sin(ang5), 0, 0],
-    [0, 0, -1, -210],
+    [0, 0, -1, -300],
     [sin(ang5), cos(ang5), 0, 0],
     [0, 0, 0, 1]
 ])
@@ -52,7 +52,7 @@ T5 = np.matrix([
 T6 = np.matrix([
     [cos(ang6), -sin(ang6), 0, 0],
     [0, 0, 1, 0],
-    [-sin(ang6), -cos(ang6), 0, 90],
+    [-sin(ang6), -cos(ang6), 0, 0],
     [0, 0, 0, 1]
 ])
 
@@ -164,5 +164,5 @@ print(Jv)
 Jv_str = Jv.__str__()
 
 # テキストファイルに書き込む
-with open('jacobiandata.txt', 'w') as file:
+with open('jacobiandata_text.txt', 'w') as file:
     file.write(Jv_str)
