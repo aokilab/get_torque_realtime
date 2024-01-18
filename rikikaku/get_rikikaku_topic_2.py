@@ -74,7 +74,7 @@ def main():
 
     rospy.init_node('sensor_data_publisher', anonymous=True)
     pub = rospy.Publisher('sensor_data', Int32MultiArray, queue_size=10)
-    rate = rospy.Rate(1000)
+    rate = rospy.Rate(100)
 
     # 最初の100回分のデータを用いてキャリブレーションデータを計算
     calibration_data = calculate_calibration_data(ser, num_samples=100)

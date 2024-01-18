@@ -8,7 +8,7 @@ from numpy import *
 
 # グローバル変数（トルクデータと角度データを格納する行列および変数）
 torque_matrix = zeros((1, 7))
-angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0
+angle1, angle2, angle3, angle4, angle5, angle6, angle7 = 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0
 ang1, ang2, ang3, ang4, ang5, ang6, ang7 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
 def callback(data):
@@ -22,7 +22,7 @@ def main():
     rospy.init_node("joint_states_listener", anonymous=True)
     rospy.Subscriber("/torobo/joint_states", JointState, callback)
     pub = rospy.Publisher('/torobo/torque_end', Float64MultiArray, queue_size=10)
-    rate = rospy.Rate(10)  # 10Hz
+    rate = rospy.Rate(100)  # 10Hz
     # ここでトピックが更新されるたびにコールバック関数が呼ばれる
 
     # ヤコビアンの計算を行う
@@ -80,12 +80,13 @@ def main():
 
 
 
+
         # ヤコビアンを転置行列化
         jac_t =  jac.T
 
         # ヤコビアン転置行列の疑似逆行列
         jac_t_inv = linalg.pinv(jac_t)
-        #jac_t_inv = linalg.inv(jac *jac_t) * jac
+        #jac_t_inv = jac * linalg.inv(jac_t * jac)
 
         # 先端力を計算
         torque_matrix_T = transpose(torque_matrix)
